@@ -2,12 +2,62 @@
 
 require 'hoot'
 
-Signal.trap('INT') {} # Suppress backtrace when exiting command
+require 'commander/import'
 
-if Hoot::User.isAuthenticated?
-	client = Hoot::Client.new
+HighLine.track_eof = false # Fix for built-in Ruby
+# Signal.trap('INT') {} # Suppress backtrace when exiting command
 
-	client.send
-else
-	Hoot::User.authenticate
+program :version, Hoot::VERSION
+program :description, 'This is Hoot! Hoot is a simple command line tool to alert you when a Terminal process has finished, with a push notification right to your device!'
+
+program :help, 'Author', 'Rudd Fawcett <rudd.fawcett@gmail.com>'
+program :help, 'Website', 'https://github.com/ruddfawcett'
+program :help_formatter, :compact
+
+never_trace!
+default_command :push
+
+command :login do |c|
+  c.syntax = 'hoot login'
+  c.description = 'Login into your Hoot account.'
+
+  c.example 'login', 'hoot login'
+
+  c.action do |args, options|
+		Hoot::User.login
+  end
+end
+
+command :logout do |c|
+  c.syntax = 'hoot logout'
+  c.description = 'Logout of your Hoot account.'
+
+  c.example 'logout', 'hoot logout'
+
+  c.action do |args, options|
+		Hoot::User.logout
+  end
+end
+
+command :push do |c|
+  c.syntax = 'hoot'
+  c.description = 'Send a push notification; or just use `hoot`!'
+
+  c.option '-m', '--message String', String, 'Send a notification with a custom message.'
+  c.example 'push', 'hoot -m "Custom message."'
+
+	c.action do |args, options|
+		unless Hoot::Keychain.authenticated?
+			abort('You must first login with `hoot login`.')
+		end
+
+		client.push(options.message)
+
+	end
+end
+
+private
+
+def client
+	Hoot::Client.new
 end

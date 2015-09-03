@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.license       = "MIT"
 
   s.add_dependency "netrc"
+  s.add_dependency "commander"
   s.add_dependency "json"
 
   s.files         = Dir["./**/*"].reject { |file| file =~ /\.\/(bin|log|pkg|script|spec|test|vendor)/ }

@@ -28,23 +28,25 @@ Hoot is not very fancy...
 
 When you first install hoot, you will need to authenticate yourself using the email and password you used in the iOS app.
 
-Simply execute `hoot`, and you will be prompted to enter your credentials.  Note as of right now you cannot change these with the tool, you'll have to manually edit your `.netrc` file.
+Execute `hoot login`, and you will be prompted to enter your credentials.  To logout, `hoot logout` (you'll still have to remove all traces of Hoot form `~/.netrc`, though your hashed password and email are wiped).
 
 To use, you can do something like the following,
 
     sh my-long-process.sh && hoot
 
-After your scraping tool/parser/long task has been completed, you'll get an alert on your phone.
+After your scraping tool/parser/long task has been completed, you'll get an alert on your phone, such as the default message.
 
 > Hoot! Your process has finished! Come back!
 
-## Development
+If you want to use a custom message, you can use a familiar `git` syntax.
 
-I'd love to flesh out the project some more, but currently it fits my needs.  Things that definitely need to be added are a more effective authentication gem (I don't know exactly which one), and `commander` (or another tool that makes processing arguments easier).  Maybe even some testing?
+    hoot -m "Your custom message."
+
+## Development
 
 To add features, I'd recommend also using your own branch of `hedwig` ([ruddfawcett/hedwig](https://github.com/ruddfawcett/hedwig)).  You can hack on Hoot with your local copy of Hedwig, and enable development mode using the following:
 
-    HEDWING_ENDPOINT="http://localhost:5000" DEV=true hoot
+    DEV=true hoot
 
 ## Contributing
 

@@ -3,6 +3,7 @@ require 'net/https'
 require 'uri'
 
 module Hoot
+
 	unless ENV['DEV']
 		HEDWING_ENDPOINT = 'https://hedwig.herokuapp.com'
 	else
@@ -13,30 +14,58 @@ module Hoot
 		attr_accessor :hedwig
 		attr_accessor :credentials
 
-	    def initialize
-	    	@hedwig = ENV['HEDWING_ENDPOINT'] || HEDWING_ENDPOINT
-	     	@credentials = Hoot::User::credentials
-	    end
+		def initialize
+			@hedwig = ENV['HEDWING_ENDPOINT'] || HEDWING_ENDPOINT
+		end
 
-	    def send
-	    	# TODO: Custom messages
+		def push(message = nil)
+			@credentials = Hoot::Keychain::credentials
 
-	    	response = request(@hedwig)
-	    	response = JSON.parse(response.body)
+			if message.nil?
+				message = 'Hoot! Your command has completed! Come back!'
+			end
 
-	    	if response['error']
-	    		abort('A server error occurred.')
-	    	end
+			data = {
+				:credentials => {
+					:email => @credentials[0],
+					:password => @credentials[1]
+				},
+				:message => message
+			}
 
-	    	if response['result']
-	    		abort('A Hoot was sent to your device.')
-	    	end
-	    end
+			response = request('send', data)
 
-	    private
+			if response['result']
+				abort('A Hoot was sent to your device.')
+			end
 
-	    def request(uri)
-			uri = URI.parse(uri)
+			abort('A server error occurred.')
+		end
+
+		def authenticate(credentials)
+			data = {
+				:credentials => {
+					:email => credentials[0],
+					:password => credentials[1]
+				}
+			}
+
+			response = request('authenticate', data)
+
+			if response['result']
+				Hoot::Keychain.save(credentials)
+				abort('Authentication successful.')
+			end
+
+			puts 'Authentication failed.'
+
+			Hoot::User::login
+		end
+
+		private
+
+		def request(path, data)
+			uri = URI.parse(@hedwig)
 			http = Net::HTTP.new(uri.host, uri.port)
 
 			unless ENV['DEV']
@@ -44,12 +73,36 @@ module Hoot
 				http.verify_mode = OpenSSL::SSL::VERIFY_PEER
 			end
 
-			request = Net::HTTP::Post.new('/api/v1/send')
+			data = encode(data)
+
+			request = Net::HTTP::Post.new("/api/v1/#{path}")
 			request.add_field('Content-Type', 'application/json')
-			request.set_form_data({'credentials[email]' => @credentials[0], 'credentials[password]' => @credentials[1]})
+			request.set_form_data(data)
 			response = http.request(request)
 
-			response
-	    end
+			JSON.parse(response.body)
+		end
+
+		# http://dev.mensfeld.pl/2012/01/converting-nested-hash-into-http-url-params-hash-version-in-ruby/
+
+		def encode(value, key = nil, out_hash = {})
+			case value
+				when Hash  then
+					value.each { |k,v| encode(v, append_key(key,k), out_hash) }
+					out_hash
+				when Array then
+					value.each { |v| encode(v, "#{key}[]", out_hash) }
+					out_hash
+				when nil   then ''
+				else
+					out_hash[key] = value
+					out_hash
+			end
+		end
+
+		def append_key(root_key, key)
+			root_key.nil? ? :"#{key}" : :"#{root_key}[#{key.to_s}]"
+		end
+
 	end
 end
