@@ -1,4 +1,5 @@
-require 'hoot/keychain'
 require 'hoot/client'
+require 'hoot/keychain'
+require 'hoot/metadata'
 require 'hoot/user'
 require 'hoot/version'

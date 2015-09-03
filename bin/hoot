@@ -52,8 +52,22 @@ command :push do |c|
 		end
 
 		client.push(options.message)
-
 	end
+end
+
+command :set do |c|
+  c.syntax = 'hoot set [options]'
+  c.description = 'Set metadata for your notifications, ex. description, sender.'
+
+  c.option '-d', '--description String', String, 'Set the device description, e.g. "My Macbook."'
+  c.option '-s', '--device String', String, 'Sets the sender (for Hoot app icon).  Options: `laptop`, `server` or `desktop`.'
+
+  c.example 'set', 'hoot --description "My Macbook Pro" --device server'
+
+  c.action do |args, options|
+    Hoot::Metadata.set(:description, options.description)
+    Hoot::Metadata.set(:device, options.device)
+  end
 end
 
 private

@@ -30,7 +30,8 @@ module Hoot
 					:email => @credentials[0],
 					:password => @credentials[1]
 				},
-				:message => message
+				:message => message,
+				:metadata => Hoot::Metadata.get
 			}
 
 			response = request('send', data)
